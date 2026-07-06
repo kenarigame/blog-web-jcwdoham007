@@ -4,14 +4,19 @@ import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BlogCard } from "./BlogCard";
 import type { PageableResponse } from "@/types/pagination";
+import GlobalPagination from "../GlobalPagination";
 
 function Grid() {
   const [blogs, setBlogs] = useState<PageableResponse<Blog>>();
   const [isPending, setIsPending] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1);
 
   const getBlogs = async () => {
     try {
-      const { data } = await axiosInstance2.get<PageableResponse<Blog>>("/blogs");
+      const { data } = await axiosInstance2.get<PageableResponse<Blog>>(
+        "/blogs",
+        { params: { page } },
+      );
       setBlogs(data);
     } catch (error) {
       console.log(error);
@@ -23,7 +28,7 @@ function Grid() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     getBlogs();
-  }, []);
+  }, [page]);
 
   return (
     <section className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
@@ -41,6 +46,18 @@ function Grid() {
           <BlogCard key={b.id} blog={b} />
         ))}
       </div>
+
+      {blogs && (
+        <div className="py-8">
+          <GlobalPagination
+            currentPage={blogs.meta.page}
+            totalPage={Math.ceil(blogs.meta.total / blogs.meta.take)}
+            onChangePage={(p) => {
+              setPage(p);
+            }}
+          />
+        </div>
+      )}
     </section>
   );
 }
