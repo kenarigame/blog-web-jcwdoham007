@@ -1,12 +1,13 @@
-import { createRoot } from 'react-dom/client';
-import { Toaster } from 'react-hot-toast';
+import { createRoot } from "react-dom/client";
+import { Toaster } from "react-hot-toast";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
-import './index.css';
-import BlogDetail from './pages/BlogDetail';
-import CreateBlog from './pages/CreateBlog';
-import Homepage from './pages/Homepage';
-import Login from './pages/Login';
+import "./index.css";
+import BlogDetail from "./pages/BlogDetail";
+import CreateBlog from "./pages/CreateBlog";
+import Homepage from "./pages/Homepage";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const router = createBrowserRouter([
   {
@@ -17,7 +18,7 @@ const router = createBrowserRouter([
     path: "/login",
     element: <Login />,
   },
-    {
+  {
     path: "/blogs/:objectId",
     element: <BlogDetail />,
   },
@@ -25,11 +26,15 @@ const router = createBrowserRouter([
     path: "/create",
     element: <CreateBlog />,
   },
+  {
+    path: "/register",
+    element: <Register />,
+  },
 ]);
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <>
     <RouterProvider router={router} />
     <Toaster />
   </>,
-)
+);
