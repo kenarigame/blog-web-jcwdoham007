@@ -1,0 +1,194 @@
+import { Button } from "@/components/ui/button";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/stores/useAuth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff, PenLine } from "lucide-react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router";
+import { z } from "zod";
+import GoogleIcon from "../components/icons/GoogleIcon";
+import { axiosInstance } from "@/lib/axios";
+
+const formSchema = z.object({
+  email: z.email(),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters.")
+    .max(50, "Password must be at most 50 characters."),
+});
+
+function Login() {
+  const [show, setShow] = useState<boolean>(false);
+  const [isPending, setIsPending] = useState<boolean>(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const { login } = useAuth();
+
+  const navigate = useNavigate();
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    setIsPending(true);
+    try {
+      const response = await axiosInstance.post("/users/login", {
+        login: data.email,
+        password: data.password,
+      });
+
+      alert("login success");
+
+      login({
+        email: response.data.email,
+        name: response.data.name,
+        objectId: response.data.objectId,
+        userToken: response.data["user-token"],
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+      alert("login failed");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex hero-bg">
+      <div className="flex-1 grid place-items-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <Link to="/" className="flex items-center justify-center gap-2 mb-8">
+            <span className="grid h-10 w-10 place-items-center rounded-xl gradient-primary shadow-glow">
+              <PenLine className="h-4 w-4 text-primary-foreground" />
+            </span>
+            <span className="font-display text-2xl font-semibold tracking-tight">
+              Inkwell
+            </span>
+          </Link>
+
+          <div className="rounded-2xl border border-border bg-card/95 backdrop-blur p-8 shadow-card">
+            <h1 className="font-display text-2xl font-semibold tracking-tight">
+              Welcome back
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              Sign in to keep reading where you left off.
+            </p>
+
+            <form
+              className="mt-7 space-y-4"
+              id="form-login"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="form-login-email">Email</FieldLabel>
+                    <Input
+                      {...field}
+                      id="form-login-email"
+                      aria-invalid={fieldState.invalid}
+                      placeholder="you@domain.com"
+                      autoComplete="on"
+                      className="py-5"
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="form-login-password">
+                      Password
+                    </FieldLabel>
+
+                    <div className="relative mt-1.5">
+                      <Input
+                        {...field}
+                        id="form-login-password"
+                        aria-invalid={fieldState.invalid}
+                        placeholder="••••••••"
+                        className="py-5"
+                        type={show ? "text" : "password"}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setShow((s) => !s)}
+                        aria-label={show ? "Hide password" : "Show password"}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground"
+                      >
+                        {show ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Button
+                form="form-login"
+                type="submit"
+                className="w-full gradient-primary text-primary-foreground hover:opacity-90 shadow-glow h-11"
+                disabled={isPending}
+              >
+                {isPending ? "Loading" : "Sign In"}
+              </Button>
+            </form>
+
+            <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="h-px flex-1 bg-border" />
+              <span>or</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+
+            <button
+              type="button"
+              className="w-full h-11 flex items-center justify-center gap-2.5 rounded-lg border border-border bg-background text-sm font-medium hover:bg-surface transition-colors"
+            >
+              <GoogleIcon />
+              Continue with Google
+            </button>
+
+            <p className="mt-7 text-center text-sm text-muted-foreground">
+              New to Inkwell?{" "}
+              <a href="#" className="text-primary font-medium hover:underline">
+                Create an account
+              </a>
+            </p>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            <Link to="/" className="hover:text-foreground">
+              ← Back to stories
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Login;
