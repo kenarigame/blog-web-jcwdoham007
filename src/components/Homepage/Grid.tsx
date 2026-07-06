@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { BlogCard } from "./BlogCard";
 import type { PageableResponse } from "@/types/pagination";
 import GlobalPagination from "../GlobalPagination";
+import { parseAsInteger, useQueryState } from "nuqs";
 
 function Grid() {
   const [blogs, setBlogs] = useState<PageableResponse<Blog>>();
   const [isPending, setIsPending] = useState<boolean>(true);
-  const [page, setPage] = useState<number>(1);
+
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
   const getBlogs = async () => {
     try {

@@ -9,6 +9,7 @@ import CreateBlog from "./pages/CreateBlog";
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import { NuqsAdapter } from "nuqs/adapters/react";
 
 const router = createBrowserRouter([
   {
@@ -36,7 +37,9 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <>
-    <RouterProvider router={router} />
-    <Toaster />
+    <NuqsAdapter>
+      <RouterProvider router={router} />
+      <Toaster />
+    </NuqsAdapter>
   </>,
 );
