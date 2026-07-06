@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { axiosInstance2 } from "@/lib/axios";
 import { useAuth } from "@/stores/useAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, PenLine } from "lucide-react";
@@ -9,7 +10,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import GoogleIcon from "../components/icons/GoogleIcon";
-import { axiosInstance } from "@/lib/axios";
+import toast from "react-hot-toast";
 
 const formSchema = z.object({
   email: z.email(),
@@ -38,24 +39,26 @@ function Login() {
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsPending(true);
     try {
-      const response = await axiosInstance.post("/users/login", {
-        login: data.email,
+      const response = await axiosInstance2.post("/auth/login", {
+        email: data.email,
         password: data.password,
       });
 
-      alert("login success");
+      toast.success("login success");
 
       login({
-        email: response.data.email,
+        id: response.data.id,
         name: response.data.name,
-        objectId: response.data.objectId,
-        userToken: response.data["user-token"],
+        email: response.data.email,
+        profilePic: response.data.profilePic,
+        role: response.data.role,
+        accessToken: response.data.accessToken,
       });
 
       navigate("/");
     } catch (error) {
       console.log(error);
-      alert("login failed");
+      toast.error("login failed");
     } finally {
       setIsPending(false);
     }
