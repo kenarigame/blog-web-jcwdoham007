@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { createBrowserRouter } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import "./index.css";
+import { authLoader } from "./loaders/auth";
 import BlogDetail from "./pages/BlogDetail";
 import CreateBlog from "./pages/CreateBlog";
 import Homepage from "./pages/Homepage";
@@ -19,12 +20,13 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/blogs/:objectId",
+    path: "/blogs/:slug",
     element: <BlogDetail />,
   },
   {
     path: "/create",
     element: <CreateBlog />,
+    loader: authLoader,
   },
   {
     path: "/register",

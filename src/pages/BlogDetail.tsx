@@ -1,6 +1,6 @@
 import { Navbar } from "@/components/Navbar";
-import type { Blog } from "@/components/types/blog";
-import { axiosInstance } from "@/lib/axios";
+import { axiosInstance2 } from "@/lib/axios";
+import type { Blog } from "@/types/blog";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
@@ -13,10 +13,7 @@ function BlogDetail() {
 
   const getBlog = async () => {
     try {
-      const response = await axiosInstance.get(
-        `/data/Blogs/${params.objectId}`,
-      );
-
+      const response = await axiosInstance2.get(`/blogs/${params.slug}`);
       setBlog(response.data);
     } catch (error) {
       console.log(error);
@@ -75,9 +72,9 @@ function BlogDetail() {
             <div className="mt-8 flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <div>
-                  <p className="text-sm font-semibold">{blog?.author}</p>
+                  <p className="text-sm font-semibold">{blog?.user.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {blog?.created}
+                    {blog?.createdAt}
                   </p>
                 </div>
               </div>
