@@ -1,11 +1,11 @@
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
-import type { Blog } from "../types/blog";
+import type { Blog } from "@/types/blog";
 
 export function BlogCard({ blog }: { blog: Blog }) {
   return (
     <Link
-      to=""
+      to={`/blogs/${blog.slug}`}
       className={`group flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-card`}
     >
       <div className={`relative overflow-hidden bg-muted aspect-16/10`}>
@@ -33,7 +33,7 @@ export function BlogCard({ blog }: { blog: Blog }) {
         <div className="mt-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full gradient-primary text-xs font-semibold text-primary-foreground">
-              {blog.author
+              {blog.user.name
                 .split(" ")
                 .map((s: string) => s[0])
                 .join("")
@@ -41,10 +41,10 @@ export function BlogCard({ blog }: { blog: Blog }) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-xs font-medium text-foreground">
-                {blog.author}
+                {blog.user.name}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                {String(new Date(blog.created))}
+                {String(new Date(blog.createdAt))}
               </p>
             </div>
           </div>

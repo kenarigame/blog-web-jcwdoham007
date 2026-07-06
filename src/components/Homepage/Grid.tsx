@@ -1,17 +1,18 @@
-import { axiosInstance } from "@/lib/axios";
+import { axiosInstance2 } from "@/lib/axios";
+import type { Blog } from "@/types/blog";
 import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BlogCard } from "./BlogCard";
-import type { Blog } from "../types/blog";
+import type { PageableResponse } from "@/types/pagination";
 
 function Grid() {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [blogs, setBlogs] = useState<PageableResponse<Blog>>();
   const [isPending, setIsPending] = useState<boolean>(true);
 
   const getBlogs = async () => {
     try {
-      const response = await axiosInstance.get<Blog[]>("/data/Blogs");
-      setBlogs(response.data);
+      const { data } = await axiosInstance2.get<PageableResponse<Blog>>("/blogs");
+      setBlogs(data);
     } catch (error) {
       console.log(error);
     } finally {
@@ -36,8 +37,8 @@ function Grid() {
       )}
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {blogs?.map((b) => (
-          <BlogCard key={b.objectId} blog={b} />
+        {blogs?.data?.map((b) => (
+          <BlogCard key={b.id} blog={b} />
         ))}
       </div>
     </section>
