@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { axiosInstance } from "@/lib/axios";
+import { axiosInstance, axiosInstance2 } from "@/lib/axios";
+import { useAuth } from "@/stores/useAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -16,7 +17,6 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   category: z.string().min(1, "Category is required"),
-  author: z.string().min(1, "Author is required"),
   content: z.string().min(1, "Content is required"),
   thumbnail: z.instanceof(File, { message: "Thumbnail must be a file" }),
 });
@@ -30,13 +30,14 @@ function CreateBlog() {
   const navigate = useNavigate();
   const [isPending, setIsPending] = useState<boolean>(false);
 
+  const { user } = useAuth();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
       category: "",
-      author: "",
       content: "",
       thumbnail: undefined,
     },
@@ -57,14 +58,21 @@ function CreateBlog() {
       );
 
       // step 2: submit data(yang berupa tulisan) ke backendless
-      await axiosInstance.post("/data/Blogs", {
-        thumbnail: response.data.fileURL,
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        author: data.author,
-        content: data.content,
-      });
+      await axiosInstance2.post(
+        "/blogs",
+        {
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          content: data.content,
+          thumbnail: response.data.fileURL,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user?.accessToken}`,
+          },
+        },
+      );
 
       toast.success("Create blog success!");
 
@@ -92,11 +100,6 @@ function CreateBlog() {
               <p className="text-muted-foreground mt-2">
                 Draft it. Preview it. Ship it when it's ready.
               </p>
-            </div>
-            <div className="flex gap-2">
-              <Button className="gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-                Publish
-              </Button>
             </div>
           </div>
 
@@ -162,26 +165,6 @@ function CreateBlog() {
                       id="form-create-category"
                       aria-invalid={fieldState.invalid}
                       placeholder="Enter your blog category"
-                      className="py-5"
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              <Controller
-                name="author"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="form-create-author">Author</FieldLabel>
-                    <Input
-                      {...field}
-                      id="form-create-author"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Enter your blog author"
                       className="py-5"
                     />
                     {fieldState.invalid && (
