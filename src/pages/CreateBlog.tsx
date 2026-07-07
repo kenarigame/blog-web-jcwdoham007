@@ -5,9 +5,8 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { axiosInstance, axiosInstance2 } from "@/lib/axios";
-import { useAuth } from "@/stores/useAuth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
@@ -28,9 +27,6 @@ interface ResponseFileService {
 
 function CreateBlog() {
   const navigate = useNavigate();
-  const [isPending, setIsPending] = useState<boolean>(false);
-
-  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,14 +39,12 @@ function CreateBlog() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsPending(true);
-    try {
+  const { mutateAsync: createBlog, isPending } = useMutation({
+    mutationFn: async (payload: z.infer<typeof formSchema>) => {
       // step 1: upload thumbnail ke file service
       const formData = new FormData();
-      formData.append("file", data.thumbnail);
+      formData.append("file", payload.thumbnail);
       const folderName = "images";
-      // eslint-disable-next-line react-hooks/purity
       const fileName = Date.now() + Math.floor(Math.random() * 1000);
       const response = await axiosInstance.post<ResponseFileService>(
         `/files/${folderName}/${fileName}`,
@@ -58,31 +52,25 @@ function CreateBlog() {
       );
 
       // step 2: submit data(yang berupa tulisan) ke backendless
-      await axiosInstance2.post(
-        "/blogs",
-        {
-          title: data.title,
-          description: data.description,
-          category: data.category,
-          content: data.content,
-          thumbnail: response.data.fileURL,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        },
-      );
-
+      await axiosInstance2.post("/blogs", {
+        title: payload.title,
+        description: payload.description,
+        category: payload.category,
+        content: payload.content,
+        thumbnail: response.data.fileURL,
+      });
+    },
+    onSuccess: () => {
       toast.success("Create blog success!");
-
       navigate("/");
-    } catch (error) {
-      console.log(error);
+    },
+    onError: () => {
       toast.error("Create blog failed!");
-    } finally {
-      setIsPending(false);
-    }
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    await createBlog(data);
   }
 
   return (
@@ -209,6 +197,7 @@ function CreateBlog() {
                       aria-invalid={fieldState.invalid}
                       placeholder="Choose your blog thumbnail"
                       type="file"
+                      accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) field.onChange(file);

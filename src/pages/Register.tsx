@@ -3,6 +3,7 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { axiosInstance2 } from "@/lib/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { Eye, EyeOff, PenLine } from "lucide-react";
 import { useState } from "react";
@@ -17,12 +18,19 @@ const formSchema = z.object({
   password: z
     .string()
     .min(6, "Password must be at least 6 characters.")
-    .max(50, "Password must be at most 50 characters."),
+    .max(50, "Password must be at most 50 characters.")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(
+      /[!@#$%^&*(),.?":{}|<>_\-\\[\]/+=~`';]/,
+      "Password must contain at least one special character",
+    ),
 });
 
 function Register() {
+  const navigate = useNavigate();
   const [show, setShow] = useState<boolean>(false);
-  const [isPending, setIsPending] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,27 +41,25 @@ function Register() {
     },
   });
 
-  const navigate = useNavigate();
+  const { mutateAsync: register, isPending } = useMutation({
+    mutationFn: async (payload: z.infer<typeof formSchema>) => {
+      await axiosInstance2.post("/auth/register", {
+        name: payload.name,
+        email: payload.email,
+        password: payload.password,
+      });
+    },
+    onSuccess: () => {
+      toast.success("register success");
+      navigate("/login");
+    },
+    onError: (error: AxiosError<{ message: string }>) => {
+      toast.error(error.response?.data.message || "Something went wrong!");
+    },
+  });
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsPending(true);
-    try {
-      await axiosInstance2.post("/auth/register", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      });
-
-      toast.success("register success");
-
-      navigate("/login");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        toast.error(error.response?.data.message || "Something went wrong!");
-      }
-    } finally {
-      setIsPending(false);
-    }
+    await register(data);
   }
 
   return (
