@@ -1,31 +1,20 @@
 import { Navbar } from "@/components/Navbar";
 import { axiosInstance2 } from "@/lib/axios";
 import type { Blog } from "@/types/blog";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 
 function BlogDetail() {
   const params = useParams();
 
-  const [blog, setBlog] = useState<Blog | null>(null);
-  const [isPending, setIsPending] = useState<boolean>(true);
-
-  const getBlog = async () => {
-    try {
-      const response = await axiosInstance2.get(`/blogs/${params.slug}`);
-      setBlog(response.data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    getBlog();
-  }, []);
+  const { data: blog, isPending } = useQuery({
+    queryKey: ["blog", params.slug],
+    queryFn: async () => {
+      const { data } = await axiosInstance2.get<Blog>(`/blogs/${params.slug}`);
+      return data;
+    },
+  });
 
   return (
     <div className="min-h-screen flex flex-col">

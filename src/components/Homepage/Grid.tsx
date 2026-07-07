@@ -1,36 +1,25 @@
 import { axiosInstance2 } from "@/lib/axios";
 import type { Blog } from "@/types/blog";
-import { Loader } from "lucide-react";
-import { useEffect, useState } from "react";
-import { BlogCard } from "./BlogCard";
 import type { PageableResponse } from "@/types/pagination";
-import GlobalPagination from "../GlobalPagination";
+import { useQuery } from "@tanstack/react-query";
+import { Loader } from "lucide-react";
 import { parseAsInteger, useQueryState } from "nuqs";
+import GlobalPagination from "../GlobalPagination";
+import { BlogCard } from "./BlogCard";
 
 function Grid() {
-  const [blogs, setBlogs] = useState<PageableResponse<Blog>>();
-  const [isPending, setIsPending] = useState<boolean>(true);
-
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
-  const getBlogs = async () => {
-    try {
+  const { data: blogs, isPending } = useQuery({
+    queryKey: ["blogs", page],
+    queryFn: async () => {
       const { data } = await axiosInstance2.get<PageableResponse<Blog>>(
         "/blogs",
         { params: { page } },
       );
-      setBlogs(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    getBlogs();
-  }, [page]);
+      return data;
+    },
+  });
 
   return (
     <section className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-16">

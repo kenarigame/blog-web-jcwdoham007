@@ -11,6 +11,7 @@ import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import GoogleIcon from "../components/icons/GoogleIcon";
 import toast from "react-hot-toast";
+import { useMutation } from "@tanstack/react-query";
 
 const formSchema = z.object({
   email: z.email(),
@@ -21,8 +22,11 @@ const formSchema = z.object({
 });
 
 function Login() {
+  const navigate = useNavigate();
+
+  const { login } = useAuth();
+
   const [show, setShow] = useState<boolean>(false);
-  const [isPending, setIsPending] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,36 +36,35 @@ function Login() {
     },
   });
 
-  const { login } = useAuth();
-
-  const navigate = useNavigate();
-
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsPending(true);
-    try {
+  const { mutateAsync: loginAction, isPending } = useMutation({
+    mutationFn: async (payload: z.infer<typeof formSchema>) => {
       const response = await axiosInstance2.post("/auth/login", {
-        email: data.email,
-        password: data.password,
+        email: payload.email,
+        password: payload.password,
       });
-
+      return response.data;
+    },
+    onSuccess: (response) => {
       toast.success("login success");
 
       login({
-        id: response.data.id,
-        name: response.data.name,
-        email: response.data.email,
-        profilePic: response.data.profilePic,
-        role: response.data.role,
-        accessToken: response.data.accessToken,
+        id: response.id,
+        name: response.name,
+        email: response.email,
+        profilePic: response.profilePic,
+        role: response.role,
+        accessToken: response.accessToken,
       });
 
       navigate("/");
-    } catch (error) {
-      console.log(error);
+    },
+    onError: () => {
       toast.error("login failed");
-    } finally {
-      setIsPending(false);
-    }
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    await loginAction(data);
   }
 
   return (
@@ -168,6 +171,7 @@ function Login() {
             </div>
 
             <button
+              disabled
               type="button"
               className="w-full h-11 flex items-center justify-center gap-2.5 rounded-lg border border-border bg-background text-sm font-medium hover:bg-surface transition-colors"
             >
@@ -177,9 +181,12 @@ function Login() {
 
             <p className="mt-7 text-center text-sm text-muted-foreground">
               New to Inkwell?{" "}
-              <a href="#" className="text-primary font-medium hover:underline">
+              <Link
+                to="/register"
+                className="text-primary font-medium hover:underline"
+              >
                 Create an account
-              </a>
+              </Link>
             </p>
           </div>
 
